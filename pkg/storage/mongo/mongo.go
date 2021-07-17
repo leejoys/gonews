@@ -3,7 +3,6 @@ package mongo
 import (
 	"context"
 	"gonews/pkg/storage"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -63,7 +62,6 @@ func (s *Store) Posts() ([]storage.Post, error) {
 
 //AddPost - создание новой публикации
 func (s *Store) AddPost(p storage.Post) error {
-	p.CreatedAt = time.Now().Unix()
 	coll := s.db.Collection("posts")
 	_, err := coll.InsertOne(context.Background(), p)
 	if err != nil {
@@ -79,8 +77,8 @@ func (s *Store) UpdatePost(p storage.Post) error {
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "title", Value: p.Title},
 		{Key: "content", Value: p.Content},
-		{Key: "authorid", Value: p.AuthorID},
-		{Key: "publishedat", Value: p.PublishedAt}}}}
+		{Key: "pubtime", Value: p.PubTime},
+		{Key: "link", Value: p.Link}}}}
 	_, err := coll.UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return err
