@@ -48,7 +48,7 @@ func (s *Store) Posts() ([]storage.Post, error) {
 	}
 	defer cur.Close(ctx)
 
-	var posts []storage.Post
+	posts := []storage.Post{}
 	for cur.Next(ctx) {
 		var p storage.Post
 		err = cur.Decode(&p)
