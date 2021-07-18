@@ -6,7 +6,7 @@ import (
 	"gonews/pkg/api"
 	"gonews/pkg/rss"
 	"gonews/pkg/storage"
-	"gonews/pkg/storage/mongo"
+	"gonews/pkg/storage/mongodb"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,7 +28,7 @@ func main() {
 	connstr := fmt.Sprintf(
 		"mongodb+srv://sup:%s@cloud0.wspoq.mongodb.net/gonews?retryWrites=true&w=majority",
 		pwd)
-	db, err := mongo.New("gonews", connstr)
+	db, err := mongodb.New("gonews", connstr)
 	if err != nil {
 		log.Fatalf("mongo.New error: %s", err)
 	}
@@ -47,12 +47,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("main ioutil.ReadAll error: %s", err)
 	}
-	eater := rss.RSSEater{}
-	err = json.Unmarshal(cByte, &eater)
+	parser := rss.RSSParser{}
+	err = json.Unmarshal(cByte, &parser)
 	if err != nil {
 		log.Fatalf("main json.Unmarshal error: %s", err)
 	}
-	eater.Run()
+	go parser.Run(db)
 
 	// Создаём объект API и регистрируем обработчики.
 	srv.api = api.New(srv.db)
