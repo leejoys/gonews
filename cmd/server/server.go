@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gonews/pkg/api"
+	"gonews/pkg/rss"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongo"
 	"io/ioutil"
@@ -16,25 +17,6 @@ import (
 type server struct {
 	db  storage.Interface
 	api *api.API
-}
-
-//работает с RSS, хранит конфигурацию
-type rssEater struct {
-	RSS            []string
-	Request_period int
-	postChan       chan (storage.Post)
-	errorChan      chan (error)
-}
-
-//запускает опрос заданных RSS
-func (c *rssEater) Run() {
-	for _, link := range c.RSS {
-		go rssEat(link, c.Request_period)
-	}
-}
-
-func rssEat(link string, period int) {
-
 }
 
 func main() {
@@ -57,20 +39,20 @@ func main() {
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	cFile, err := os.Open("./config.json")
+	cFile, err := os.Open("./bconfig.json")
 	if err != nil {
-		log.Fatalf("os.Open error: %s", err)
+		log.Fatalf("main os.Open error: %s", err)
 	}
 	cByte, err := ioutil.ReadAll(cFile)
 	if err != nil {
-		log.Fatalf("ioutil.ReadAll error: %s", err)
+		log.Fatalf("main ioutil.ReadAll error: %s", err)
 	}
-	conf := rssEater{}
-	err = json.Unmarshal(cByte, &conf)
+	eater := rss.RSSEater{}
+	err = json.Unmarshal(cByte, &eater)
 	if err != nil {
-		log.Fatalf("json.Unmarshal error: %s", err)
+		log.Fatalf("main json.Unmarshal error: %s", err)
 	}
-	conf.Run()
+	eater.Run()
 
 	// Создаём объект API и регистрируем обработчики.
 	srv.api = api.New(srv.db)
