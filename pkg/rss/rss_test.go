@@ -24,7 +24,7 @@ func Test_RSSParser(t *testing.T) {
 	}
 
 	//Создаем обработчик RSS
-	cFile, err := os.Open("./config.json")
+	cFile, err := os.Open("./aconfig.json")
 	if err != nil {
 		t.Fatalf("main os.Open error: %s", err)
 	}
