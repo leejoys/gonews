@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"gonews/pkg/storage"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -40,7 +41,13 @@ func (api *API) Router() *mux.Router {
 
 // Получение всех публикаций.
 func (api *API) posts(w http.ResponseWriter, r *http.Request) {
-	posts, err := api.db.Posts()
+	ns := mux.Vars(r)["n"]
+	n, err := strconv.Atoi(ns)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	posts, err := api.db.PostsN(n)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

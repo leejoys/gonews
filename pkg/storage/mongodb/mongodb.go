@@ -72,6 +72,30 @@ func (s *Store) Posts() ([]storage.Post, error) {
 	return posts, nil
 }
 
+//PostsN - получение n последних публикаций
+func (s *Store) PostsN(n int) ([]storage.Post, error) {
+
+	coll := s.db.Collection("posts")
+	ctx := context.Background()
+	filter := bson.D{}
+	cur, err := coll.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cur.Close(ctx)
+
+	posts := []storage.Post{}
+	for cur.Next(ctx) {
+		var p storage.Post
+		err = cur.Decode(&p)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, p)
+	}
+	return posts, nil
+}
+
 //AddPost - создание новой публикации
 func (s *Store) AddPost(p storage.Post) error {
 	coll := s.db.Collection("posts")

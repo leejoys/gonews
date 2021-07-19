@@ -38,5 +38,5 @@ func Test_RSSParser(t *testing.T) {
 		t.Fatalf("main json.Unmarshal error: %s", err)
 	}
 	go parser.Run(db)
-	time.Sleep(time.Second * 4)
+	time.Sleep(time.Second * 10)
 }
