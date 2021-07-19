@@ -77,8 +77,11 @@ func (s *Store) PostsN(n int) ([]storage.Post, error) {
 
 	coll := s.db.Collection("posts")
 	ctx := context.Background()
+	options := options.Find()
+	options.SetLimit(int64(n))
+	options.SetSort(bson.D{{Key: "$natural", Value: -1}})
 	filter := bson.D{}
-	cur, err := coll.Find(ctx, filter)
+	cur, err := coll.Find(ctx, filter, options)
 	if err != nil {
 		return nil, err
 	}

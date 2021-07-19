@@ -28,7 +28,7 @@ func New(db storage.Interface) *API {
 // Регистрация обработчиков API.
 func (api *API) endpoints() {
 	// получить n последних новостей
-	api.r.HandleFunc("/news/{n}", api.posts).Methods(http.MethodGet, http.MethodOptions)
+	api.r.HandleFunc("/news/{n}", api.posts).Methods(http.MethodGet)
 	// веб-приложение
 	api.r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./webapp"))))
 }

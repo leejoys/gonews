@@ -2,7 +2,6 @@ package storage
 
 // Post - публикация.
 type Post struct {
-	ObjID   int    `xml:"-" json:"_id"`                   //номер записи в mongo
 	ID      int    `xml:"-" json:"id"`                    // номер записи
 	Title   string `xml:"title" json:"title"`             // заголовок публикации
 	Content string `xml:"description" json:"description"` // содержание публикации
