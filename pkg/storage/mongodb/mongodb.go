@@ -28,7 +28,19 @@ func New(name string, connstr string) (*Store, error) {
 		client.Disconnect(context.Background())
 		return nil, err
 	}
-	return &Store{c: client, db: client.Database(name)}, nil
+
+	s := &Store{c: client, db: client.Database(name)}
+	t := true
+	_, err = s.db.Collection("posts").Indexes().CreateOne(
+		context.Background(), mongo.IndexModel{
+			Keys:    bson.D{{Key: "title", Value: 1}},
+			Options: &options.IndexOptions{Unique: &t}})
+	if err != nil {
+		s.c.Disconnect(context.Background())
+		return nil, err
+	}
+
+	return s, nil
 }
 
 //Close - освобождение ресурса
