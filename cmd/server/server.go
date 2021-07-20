@@ -39,7 +39,7 @@ func main() {
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	cFile, err := os.Open("./aconfig.json")
+	cFile, err := os.Open("./config.json")
 	if err != nil {
 		log.Fatalf("main os.Open error: %s", err)
 	}

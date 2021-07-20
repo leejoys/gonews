@@ -62,7 +62,7 @@
                 data: function() { return { news: [] } },
                 mounted: function() {
                     var e = this,
-                        t = "http://" + window.location.hostname + ":8080/news/5";
+                        t = "http://" + window.location.hostname + ":8080/news/10";
                     fetch(t).then((function(e) { return e.json() })).then((function(t) { return e.news = t }))
                 }
             }),
@@ -88,4 +88,4 @@
         r["a"].config.productionTip = !1, new r["a"]({ vuetify: x, render: function(e) { return e(O) } }).$mount("#app")
     }
 });
-//# sourceMappingURL=app.v3.js.map
+//# sourceMappingURL=app.v4.js.map

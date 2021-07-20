@@ -22,25 +22,25 @@ type RSSParser struct {
 }
 
 //запускает опрос заданных RSS
-func (e *RSSParser) Run(db *mongodb.Store) {
-	e.postChan = make(chan storage.Post)
-	e.errorChan = make(chan error)
-	e.db = db
-	go e.poster()
-	go e.logger()
+func (p *RSSParser) Run(db *mongodb.Store) {
+	p.postChan = make(chan storage.Post)
+	p.errorChan = make(chan error)
+	p.db = db
+	go p.poster()
+	go p.logger()
 	for {
-		for _, link := range e.RSS {
-			go e.rssParse(link)
+		for _, link := range p.RSS {
+			go p.rssParse(link)
 		}
-		time.Sleep(time.Second * time.Duration(e.Request_period))
+		time.Sleep(time.Minute * time.Duration(p.Request_period))
 	}
 }
 
 //читает RSS
-func (e *RSSParser) rssParse(link string) {
+func (p *RSSParser) rssParse(link string) {
 	resp, err := http.Get(link)
 	if err != nil {
-		e.errorChan <- fmt.Errorf("rssParse http.Get error: %s", err)
+		p.errorChan <- fmt.Errorf("rssParse http.Get error: %s", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -54,7 +54,7 @@ func (e *RSSParser) rssParse(link string) {
 			break
 		}
 		if err != nil {
-			e.errorChan <- fmt.Errorf("rssParse decoder.Token error: %s", err)
+			p.errorChan <- fmt.Errorf("rssParse decoder.Token error: %s", err)
 			return
 		}
 		//выбор токена по типу
@@ -62,33 +62,33 @@ func (e *RSSParser) rssParse(link string) {
 		case xml.StartElement:
 			if tp.Name.Local == "item" {
 				// Декодирование элемента в структуру
-				var p storage.Post
-				decoder.DecodeElement(&p, &tp)
-				e.postChan <- p
+				var post storage.Post
+				decoder.DecodeElement(&post, &tp)
+				p.postChan <- post
 			}
 		}
 	}
 }
 
 //обрабатывает ответы из каналов с постами
-func (e *RSSParser) poster() {
-	for p := range e.postChan {
+func (p *RSSParser) poster() {
+	for post := range p.postChan {
 
-		t, err := time.Parse(time.RFC1123, p.PubDate)
+		t, err := time.Parse(time.RFC1123, post.PubDate)
 		if err != nil {
-			e.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
+			p.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
 		}
-		p.PubTime = t.UnixNano()
-		err = e.db.AddPost(p)
+		post.PubTime = t.Unix()
+		err = p.db.AddPost(post)
 		if err != nil {
-			e.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
+			p.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
 		}
 	}
 }
 
 //обрабатывает ответы из каналов с ошибками
-func (e *RSSParser) logger() {
-	for err := range e.errorChan {
+func (p *RSSParser) logger() {
+	for err := range p.errorChan {
 		log.Println(err)
 	}
 }
