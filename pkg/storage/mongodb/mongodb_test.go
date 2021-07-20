@@ -13,13 +13,18 @@ import (
 func TestMongo(t *testing.T) {
 	pwd := os.Getenv("Cloud0pass")
 	connstr := fmt.Sprintf(
-		"mongodb+srv://sup:%s@cloud0.wspoq.mongodb.net/gonews?retryWrites=true&w=majority",
+		"mongodb+srv://sup:%s@cloud0.wspoq.mongodb.net/dbtest?retryWrites=true&w=majority",
 		pwd)
-	db, err := New("gonews", connstr)
+	db, err := New("dbtest", connstr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer db.Close()
+	defer func() {
+		if err = db.DropDB(); err != nil {
+			t.Error(err)
+		}
+	}()
 
 	posts := []storage.Post{
 		{ID: 1,

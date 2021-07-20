@@ -48,6 +48,10 @@ func (s *Store) Close() {
 	s.c.Disconnect(context.Background())
 }
 
+func (s *Store) DropDB() error {
+	return s.db.Drop(context.Background())
+}
+
 //Posts - получение всех публикаций
 func (s *Store) Posts() ([]storage.Post, error) {
 
