@@ -78,7 +78,7 @@ func (e *RSSParser) poster() {
 		if err != nil {
 			e.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
 		}
-		p.PubTime = t.Unix()
+		p.PubTime = t.UnixNano()
 		err = e.db.AddPost(p)
 		if err != nil {
 			e.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
@@ -86,7 +86,7 @@ func (e *RSSParser) poster() {
 	}
 }
 
-//обрбатывает ответы из каналов с ошибками
+//обрабатывает ответы из каналов с ошибками
 func (e *RSSParser) logger() {
 	for err := range e.errorChan {
 		log.Println(err)
