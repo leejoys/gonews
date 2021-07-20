@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"gonews/pkg/storage"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -52,10 +53,14 @@ func (api *API) posts(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	bytes, err := json.Marshal(posts)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	for i, post := range posts {
+		post.ID = i + 1
+		log.Println(post.ID, post.Title)
+		bytes, err := json.Marshal(post)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(bytes)
 	}
-	w.Write(bytes)
 }
