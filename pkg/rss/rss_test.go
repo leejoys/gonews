@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"gonews/pkg/storage/mongodb"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -24,18 +23,14 @@ func Test_RSSParser(t *testing.T) {
 	}
 
 	//Создаем обработчик RSS
-	cFile, err := os.Open("./aconfig.json")
+	cByte, err := os.ReadFile("./aconfig.json")
 	if err != nil {
-		t.Fatalf("main os.Open error: %s", err)
-	}
-	cByte, err := ioutil.ReadAll(cFile)
-	if err != nil {
-		t.Fatalf("main ioutil.ReadAll error: %s", err)
+		t.Fatalf("ioutil.ReadFile error: %s", err)
 	}
 	parser := RSSParser{}
 	err = json.Unmarshal(cByte, &parser)
 	if err != nil {
-		t.Fatalf("main json.Unmarshal error: %s", err)
+		t.Fatalf("json.Unmarshal error: %s", err)
 	}
 	go parser.Run(db)
 	time.Sleep(time.Second * 10)

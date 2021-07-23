@@ -7,7 +7,6 @@ import (
 	"gonews/pkg/rss"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongodb"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -39,13 +38,9 @@ func main() {
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	cFile, err := os.Open("./config.json")
+	cByte, err := os.ReadFile("./aconfig.json")
 	if err != nil {
-		log.Fatalf("main os.Open error: %s", err)
-	}
-	cByte, err := ioutil.ReadAll(cFile)
-	if err != nil {
-		log.Fatalf("main ioutil.ReadAll error: %s", err)
+		log.Fatalf("main ioutil.ReadFile error: %s", err)
 	}
 	parser := rss.RSSParser{}
 	err = json.Unmarshal(cByte, &parser)
