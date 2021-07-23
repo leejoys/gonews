@@ -4,23 +4,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"gonews/pkg/api"
-	"gonews/pkg/rss"
+	"gonews/pkg/datasource"
+	"gonews/pkg/datasource/rssparser"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongodb"
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 // Сервер GoNews.
 type server struct {
+	ds  datasource.Interface
 	db  storage.Interface
 	api *api.API
 }
 
 func main() {
-	// Создаём объект сервера.
+	// Создаём объект сервера
 	var srv server
+
+	// Создаем источник данных
+	cByte, err := os.ReadFile("./aconfig.json")
+	if err != nil {
+		log.Fatalf("main ioutil.ReadFile error: %s", err)
+	}
+	dsConfig := datasource.Config{}
+	err = json.Unmarshal(cByte, &dsConfig)
+	if err != nil {
+		log.Fatalf("main json.Unmarshal error: %s", err)
+	}
+	dsConfig.PostChan = make(chan storage.Post)
+	dsConfig.ErrorChan = make(chan error)
+	srv.ds = rssparser.New(dsConfig)
 
 	// Создаём объект базы данных MongoDB.
 	pwd := os.Getenv("Cloud0pass")
@@ -32,22 +49,15 @@ func main() {
 		log.Fatalf("mongo.New error: %s", err)
 	}
 
-	// Инициализируем хранилище сервера конкретной БД.
+	// Инициализируем хранилище сервера БД
 	srv.db = db
 
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	cByte, err := os.ReadFile("./aconfig.json")
-	if err != nil {
-		log.Fatalf("main ioutil.ReadFile error: %s", err)
-	}
-	parser := rss.RSSParser{}
-	err = json.Unmarshal(cByte, &parser)
-	if err != nil {
-		log.Fatalf("main json.Unmarshal error: %s", err)
-	}
-	go parser.Run(db)
+	go poster()
+	go logger()
+	go srv.ds.Run()
 
 	// Создаём объект API и регистрируем обработчики.
 	srv.api = api.New(srv.db)
@@ -57,4 +67,27 @@ func main() {
 	// поэтому сервер будет все запросы отправлять на маршрутизатор.
 	// Маршрутизатор будет выбирать нужный обработчик.
 	log.Fatal(http.ListenAndServe(":8080", srv.api.Router()))
+}
+
+//обрабатывает ответы из каналов с постами
+func poster() {
+	for post := range p.postChan {
+
+		t, err := time.Parse(time.RFC1123, post.PubDate)
+		if err != nil {
+			p.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
+		}
+		post.PubTime = t.Unix()
+		err = p.db.AddPost(post)
+		if err != nil {
+			p.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
+		}
+	}
+}
+
+//обрабатывает ответы из каналов с ошибками
+func logger() {
+	for err := range p.errorChan {
+		log.Println(err)
+	}
 }
