@@ -6,10 +6,10 @@ import (
 
 // Config - данные для обработчика.
 type Config struct {
-	Links          []string
-	Request_period int
-	PostChan       chan storage.Post `json:"-"`
-	ErrorChan      chan error        `json:"-"`
+	Links         []string          `json:"rss"`
+	RequestPeriod int               `json:"request_period"`
+	PostChan      chan storage.Post `json:"-"`
+	ErrorChan     chan error        `json:"-"`
 }
 
 // Interface задаёт контракт на работу с источником данных.

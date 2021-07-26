@@ -55,8 +55,8 @@ func main() {
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	go poster()
-	go logger()
+	go poster(dsConfig.PostChan)
+	go logger(dsConfig.ErrorChan)
 	go srv.ds.Run()
 
 	// Создаём объект API и регистрируем обработчики.
@@ -70,8 +70,8 @@ func main() {
 }
 
 //обрабатывает ответы из каналов с постами
-func poster() {
-	for post := range p.postChan {
+func poster(c chan storage.Post) {
+	for post := range c {
 
 		t, err := time.Parse(time.RFC1123, post.PubDate)
 		if err != nil {
@@ -86,7 +86,7 @@ func poster() {
 }
 
 //обрабатывает ответы из каналов с ошибками
-func logger() {
+func logger(c chan error) {
 	for err := range p.errorChan {
 		log.Println(err)
 	}

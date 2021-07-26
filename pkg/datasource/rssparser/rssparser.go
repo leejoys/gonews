@@ -11,38 +11,37 @@ import (
 )
 
 type Source struct {
+	links         []string
+	requestPeriod int
+	postChan      chan storage.Post
+	errorChan     chan error
 }
 
-//запускает опрос заданных RSS
+//создает объект парсера RSS с заданными параметрами
 func New(c datasource.Config) *Source {
-	p.postChan = make(chan storage.Post)
-	p.errorChan = make(chan error)
-	p.db = db
-	go p.poster()
-	go p.logger()
-	for {
-		for _, link := range p.RSS {
-			go p.rssParse(link)
-		}
-		time.Sleep(time.Minute * time.Duration(p.Request_period))
+	return &Source{
+		links:         c.Links,
+		requestPeriod: c.RequestPeriod,
+		postChan:      c.PostChan,
+		errorChan:     c.ErrorChan,
 	}
 }
 
-//запускает опрос заданных RSS
+//запускает опрос заданных RSS с заданным периодом
 func (s *Source) Run() {
 	for {
-		for _, link := range p.RSS {
-			go p.rssParse(link)
+		for _, link := range s.links {
+			go s.parse(link)
 		}
-		time.Sleep(time.Minute * time.Duration(p.Request_period))
+		time.Sleep(time.Minute * time.Duration(s.requestPeriod))
 	}
 }
 
 //читает RSS
-func (s *Source) Parse(link string) {
+func (s *Source) parse(link string) {
 	resp, err := http.Get(link)
 	if err != nil {
-		p.errorChan <- fmt.Errorf("rssParse http.Get error: %s", err)
+		s.errorChan <- fmt.Errorf("rssParse http.Get error: %s", err)
 		return
 	}
 	defer resp.Body.Close()
@@ -56,7 +55,7 @@ func (s *Source) Parse(link string) {
 			break
 		}
 		if err != nil {
-			p.errorChan <- fmt.Errorf("rssParse decoder.Token error: %s", err)
+			s.errorChan <- fmt.Errorf("rssParse decoder.Token error: %s", err)
 			return
 		}
 		//выбор токена по типу
@@ -65,8 +64,12 @@ func (s *Source) Parse(link string) {
 			if tp.Name.Local == "item" {
 				// Декодирование элемента в структуру
 				var post storage.Post
-				decoder.DecodeElement(&post, &tp)
-				p.postChan <- post
+				err = decoder.DecodeElement(&post, &tp)
+				if err != nil {
+					s.errorChan <- fmt.Errorf("rssParse decoder.DecodeElement error: %s", err)
+					return
+				}
+				s.postChan <- post
 			}
 		}
 	}
