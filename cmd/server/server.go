@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"gonews/pkg/api"
 	"gonews/pkg/datasource"
-	"gonews/pkg/datasource/rssparser"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongodb"
 	"log"
@@ -16,7 +15,7 @@ import (
 
 // Сервер GoNews.
 type server struct {
-	ds        datasource.Interface
+	ds        *datasource.Source
 	db        storage.Interface
 	api       *api.API
 	postChan  chan storage.Post
@@ -32,16 +31,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("main ioutil.ReadFile error: %s", err)
 	}
-	dsConfig := datasource.Config{}
-	err = json.Unmarshal(cByte, &dsConfig)
+	srv.ds = &datasource.Source{}
+	err = json.Unmarshal(cByte, srv.ds)
 	if err != nil {
 		log.Fatalf("main json.Unmarshal error: %s", err)
 	}
-	dsConfig.PostChan = make(chan storage.Post)
-	dsConfig.ErrorChan = make(chan error)
-	srv.ds = rssparser.New(dsConfig)
-	srv.postChan = dsConfig.PostChan
-	srv.errorChan = dsConfig.ErrorChan
+	srv.ds.PostChan = make(chan storage.Post)
+	srv.ds.ErrorChan = make(chan error)
 
 	// Создаём объект базы данных MongoDB.
 	pwd := os.Getenv("Cloud0pass")

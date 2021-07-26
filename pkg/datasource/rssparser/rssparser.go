@@ -3,42 +3,26 @@ package rssparser
 import (
 	"encoding/xml"
 	"fmt"
-	"gonews/pkg/datasource"
 	"gonews/pkg/storage"
 	"io"
 	"net/http"
-	"time"
 )
 
-type Source struct {
-	links         []string
-	requestPeriod int
-	postChan      chan storage.Post
-	errorChan     chan error
+type Parser struct {
+	postChan  chan storage.Post
+	errorChan chan error
 }
 
 //создает объект парсера RSS с заданными параметрами
-func New(c datasource.Config) *Source {
-	return &Source{
-		links:         c.Links,
-		requestPeriod: c.RequestPeriod,
-		postChan:      c.PostChan,
-		errorChan:     c.ErrorChan,
-	}
-}
-
-//запускает опрос заданных RSS с заданным периодом
-func (s *Source) Run() {
-	for {
-		for _, link := range s.links {
-			go s.parse(link)
-		}
-		time.Sleep(time.Minute * time.Duration(s.requestPeriod))
+func New(postChan chan storage.Post, errorChan chan error) *Parser {
+	return &Parser{
+		postChan:  postChan,
+		errorChan: errorChan,
 	}
 }
 
 //читает RSS
-func (s *Source) parse(link string) {
+func (s *Parser) Parse(link string) {
 	resp, err := http.Get(link)
 	if err != nil {
 		s.errorChan <- fmt.Errorf("rssParse http.Get error: %s", err)
