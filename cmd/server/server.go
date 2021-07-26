@@ -16,9 +16,11 @@ import (
 
 // Сервер GoNews.
 type server struct {
-	ds  datasource.Interface
-	db  storage.Interface
-	api *api.API
+	ds        datasource.Interface
+	db        storage.Interface
+	api       *api.API
+	postChan  chan storage.Post
+	errorChan chan error
 }
 
 func main() {
@@ -38,6 +40,8 @@ func main() {
 	dsConfig.PostChan = make(chan storage.Post)
 	dsConfig.ErrorChan = make(chan error)
 	srv.ds = rssparser.New(dsConfig)
+	srv.postChan = dsConfig.PostChan
+	srv.errorChan = dsConfig.ErrorChan
 
 	// Создаём объект базы данных MongoDB.
 	pwd := os.Getenv("Cloud0pass")
@@ -55,8 +59,8 @@ func main() {
 	// Освобождаем ресурс
 	defer srv.db.Close()
 
-	go poster(dsConfig.PostChan)
-	go logger(dsConfig.ErrorChan)
+	go srv.poster()
+	go srv.logger()
 	go srv.ds.Run()
 
 	// Создаём объект API и регистрируем обработчики.
@@ -70,24 +74,24 @@ func main() {
 }
 
 //обрабатывает ответы из каналов с постами
-func poster(c chan storage.Post) {
-	for post := range c {
+func (s *server) poster() {
+	for post := range s.postChan {
 
 		t, err := time.Parse(time.RFC1123, post.PubDate)
 		if err != nil {
-			p.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
+			s.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
 		}
 		post.PubTime = t.Unix()
-		err = p.db.AddPost(post)
+		err = s.db.AddPost(post)
 		if err != nil {
-			p.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
+			s.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
 		}
 	}
 }
 
 //обрабатывает ответы из каналов с ошибками
-func logger(c chan error) {
-	for err := range p.errorChan {
+func (s *server) logger() {
+	for err := range s.errorChan {
 		log.Println(err)
 	}
 }
