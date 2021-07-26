@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gonews/pkg/api"
 	"gonews/pkg/datasource"
+	"gonews/pkg/datasource/rssparser"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongodb"
 	"log"
@@ -15,16 +16,14 @@ import (
 
 // Сервер GoNews.
 type server struct {
-	ds        *datasource.Source
-	db        storage.Interface
-	api       *api.API
-	postChan  chan storage.Post
-	errorChan chan error
+	ds  *datasource.Source
+	db  storage.Interface
+	api *api.API
 }
 
 func main() {
 	// Создаём объект сервера
-	var srv server
+	srv := server{}
 
 	// Создаем источник данных
 	cByte, err := os.ReadFile("./aconfig.json")
@@ -38,6 +37,8 @@ func main() {
 	}
 	srv.ds.PostChan = make(chan storage.Post)
 	srv.ds.ErrorChan = make(chan error)
+	p := rssparser.New(srv.ds.PostChan, srv.ds.ErrorChan)
+	srv.ds.Parser = p
 
 	// Создаём объект базы данных MongoDB.
 	pwd := os.Getenv("Cloud0pass")
@@ -63,31 +64,29 @@ func main() {
 	srv.api = api.New(srv.db)
 
 	// Запускаем веб-сервер на порту 8080 на всех интерфейсах.
-	// Предаём серверу маршрутизатор запросов,
-	// поэтому сервер будет все запросы отправлять на маршрутизатор.
-	// Маршрутизатор будет выбирать нужный обработчик.
+	// Предаём серверу маршрутизатор запросов.
 	log.Fatal(http.ListenAndServe(":8080", srv.api.Router()))
 }
 
 //обрабатывает ответы из каналов с постами
 func (s *server) poster() {
-	for post := range s.postChan {
+	for post := range s.ds.PostChan {
 
 		t, err := time.Parse(time.RFC1123, post.PubDate)
 		if err != nil {
-			s.errorChan <- fmt.Errorf("poster time.Parse error: %s", err)
+			s.ds.ErrorChan <- fmt.Errorf("poster time.Parse error: %s", err)
 		}
 		post.PubTime = t.Unix()
 		err = s.db.AddPost(post)
 		if err != nil {
-			s.errorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
+			s.ds.ErrorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
 		}
 	}
 }
 
 //обрабатывает ответы из каналов с ошибками
 func (s *server) logger() {
-	for err := range s.errorChan {
+	for err := range s.ds.ErrorChan {
 		log.Println(err)
 	}
 }
