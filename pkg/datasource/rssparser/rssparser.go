@@ -24,7 +24,7 @@ func New(postChan chan storage.Post, errorChan chan error) *Parser {
 func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 
 	decoder := xml.NewDecoder(body)
-
+	posts := []storage.Post{}
 	// Чтение item по частям
 	for {
 		tok, err := decoder.Token()
@@ -32,8 +32,7 @@ func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 			break
 		}
 		if err != nil {
-			s.errorChan <- fmt.Errorf("rssparser.Parse_decoder.Token error: %s", err)
-			return
+			return nil, fmt.Errorf("rssparser.Parse_decoder.Token error: %s", err)
 		}
 		//выбор токена по типу
 		switch tp := tok.(type) {
@@ -43,11 +42,11 @@ func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 				var post storage.Post
 				err = decoder.DecodeElement(&post, &tp)
 				if err != nil {
-					s.errorChan <- fmt.Errorf("rssparser.Parse_decoder.DecodeElement error: %s", err)
-					return
+					return nil, fmt.Errorf("rssparser.Parse_decoder.DecodeElement error: %s", err)
 				}
-				s.postChan <- post
+				posts = append(posts, post)
 			}
 		}
 	}
+	return posts, nil
 }

@@ -19,7 +19,7 @@ type Source struct {
 
 // Interface задаёт контракт на работу с источником данных.
 type Interface interface {
-	Parse(io.Reader) // запуск источника данных
+	Parse(io.Reader) ([]storage.Post, error) // запуск источника данных
 }
 
 //запускает опрос заданных адресов с заданным периодом
@@ -33,7 +33,14 @@ func (s *Source) Run() {
 					return
 				}
 				defer resp.Body.Close()
-				s.Parser.Parse(resp.Body)
+				posts, err := s.Parser.Parse(resp.Body)
+				if err != nil {
+					s.ErrorChan <- fmt.Errorf("datasource.Run_s.Parser.Parse error: %s", err)
+					return
+				}
+				for _, p := range posts {
+					s.PostChan <- p
+				}
 			}(link)
 		}
 		time.Sleep(time.Minute * time.Duration(s.RequestPeriod))
