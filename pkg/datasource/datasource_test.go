@@ -1,29 +1,30 @@
 package datasource
 
 import (
-	"fmt"
-	"gonews/pkg/storage/mongodb"
+	"encoding/json"
+	"gonews/pkg/datasource/rssparser"
+	"gonews/pkg/storage"
 	"os"
 	"testing"
-	"time"
 )
 
+//Интеграционный тест пакета datasource
 func TestSource_Run(t *testing.T) {
-	// Создаём объект базы данных MongoDB.
-	pwd := os.Getenv("Cloud0pass")
-	connstr := fmt.Sprintf(
-		"mongodb+srv://sup:%s@cloud0.wspoq.mongodb.net/dbtest?retryWrites=true&w=majority",
-		pwd)
-	db, err := mongodb.New("dbtest", connstr)
+	// Создаем источник данных
+	cByte, err := os.ReadFile("./aconfig.json")
 	if err != nil {
-		t.Fatalf("mongo.New error: %s", err)
+		t.Fatalf("main ioutil.ReadFile error: %s", err)
 	}
-	defer db.Close()
-	defer func() {
-		if err = db.DropDB(); err != nil {
-			t.Error(err)
-		}
-	}()
+	ds := &Source{}
+	err = json.Unmarshal(cByte, ds)
+	if err != nil {
+		t.Fatalf("main json.Unmarshal error: %s", err)
+	}
+	ds.PostChan = make(chan storage.Post)
+	ds.ErrorChan = make(chan error)
+	p := rssparser.New()
+	ds.Parser = p
+	go ds.Run()
 
-	time.Sleep(time.Second * 10)
+	<-ds.PostChan
 }

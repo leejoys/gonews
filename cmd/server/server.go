@@ -37,7 +37,7 @@ func main() {
 	}
 	srv.ds.PostChan = make(chan storage.Post)
 	srv.ds.ErrorChan = make(chan error)
-	p := rssparser.New(srv.ds.PostChan, srv.ds.ErrorChan)
+	p := rssparser.New()
 	srv.ds.Parser = p
 
 	// Создаём объект базы данных MongoDB.
