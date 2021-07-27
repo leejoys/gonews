@@ -7,17 +7,11 @@ import (
 	"io"
 )
 
-type Parser struct {
-	postChan  chan storage.Post
-	errorChan chan error
-}
+type Parser struct{}
 
 //создает объект парсера RSS с заданными параметрами
-func New(postChan chan storage.Post, errorChan chan error) *Parser {
-	return &Parser{
-		postChan:  postChan,
-		errorChan: errorChan,
-	}
+func New() *Parser {
+	return &Parser{}
 }
 
 //читает RSS
