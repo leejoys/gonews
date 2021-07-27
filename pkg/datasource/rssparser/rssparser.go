@@ -21,7 +21,7 @@ func New(postChan chan storage.Post, errorChan chan error) *Parser {
 }
 
 //читает RSS
-func (s *Parser) Parse(body io.Reader) {
+func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 
 	decoder := xml.NewDecoder(body)
 
