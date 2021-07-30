@@ -2,12 +2,16 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"gonews/pkg/storage"
+	"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+var ErrorDuplcatePost error = errors.New("MongoDB E11000")
 
 // Хранилище данных.
 type Store struct {
@@ -107,10 +111,10 @@ func (s *Store) PostsN(n int) ([]storage.Post, error) {
 func (s *Store) AddPost(p storage.Post) error {
 	coll := s.db.Collection("posts")
 	_, err := coll.InsertOne(context.Background(), p)
-	if err != nil {
-		return err
+	if strings.Contains(err.Error(), "E11000") {
+		return ErrorDuplcatePost
 	}
-	return nil
+	return err
 }
 
 //UpdatePost - обновление по id значения title, content, author_id и published_at

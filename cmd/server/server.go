@@ -79,7 +79,7 @@ func (s *server) poster() {
 		post.PubTime = t.Unix()
 		err = s.db.AddPost(post)
 		if err != nil {
-			s.ds.ErrorChan <- fmt.Errorf("poster storage.AddPost error: %s", err)
+			s.ds.ErrorChan <- err
 		}
 	}
 }
@@ -87,6 +87,10 @@ func (s *server) poster() {
 //обрабатывает ответы из каналов с ошибками
 func (s *server) logger() {
 	for err := range s.ds.ErrorChan {
-		log.Println(err)
+		if err == mongodb.ErrorDuplcatePost {
+			log.Println(err)
+			continue
+		}
+		log.Fatalln(err)
 	}
 }
