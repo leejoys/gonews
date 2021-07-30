@@ -2,7 +2,7 @@ package datasource
 
 import (
 	"encoding/json"
-	"gonews/pkg/datasource/rssparser"
+	"gonews/pkg/datasource/rss"
 	"gonews/pkg/storage"
 	"os"
 	"testing"
@@ -22,7 +22,7 @@ func TestSource_Run(t *testing.T) {
 	}
 	ds.PostChan = make(chan storage.Post)
 	ds.ErrorChan = make(chan error)
-	p := rssparser.New()
+	p := rss.New()
 	ds.Parser = p
 	go ds.Run()
 

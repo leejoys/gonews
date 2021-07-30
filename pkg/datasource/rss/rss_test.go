@@ -1,4 +1,4 @@
-package rssparser
+package rss
 
 import (
 	"gonews/pkg/storage"

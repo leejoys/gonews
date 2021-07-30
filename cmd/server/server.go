@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"gonews/pkg/api"
 	"gonews/pkg/datasource"
-	"gonews/pkg/datasource/rssparser"
+	"gonews/pkg/datasource/rss"
 	"gonews/pkg/storage"
 	"gonews/pkg/storage/mongodb"
 	"log"
@@ -37,7 +37,7 @@ func main() {
 	}
 	srv.ds.PostChan = make(chan storage.Post)
 	srv.ds.ErrorChan = make(chan error)
-	p := rssparser.New()
+	p := rss.New()
 	srv.ds.Parser = p
 
 	// Создаём объект базы данных MongoDB.

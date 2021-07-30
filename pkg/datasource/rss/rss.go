@@ -1,4 +1,4 @@
-package rssparser
+package rss
 
 import (
 	"encoding/xml"
@@ -7,15 +7,15 @@ import (
 	"io"
 )
 
-type Parser struct{}
+type RSS struct{}
 
 //создает объект парсера RSS с заданными параметрами
-func New() *Parser {
-	return &Parser{}
+func New() *RSS {
+	return &RSS{}
 }
 
 //читает RSS
-func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
+func (s *RSS) Parse(body io.Reader) ([]storage.Post, error) {
 
 	decoder := xml.NewDecoder(body)
 	posts := []storage.Post{}
@@ -26,7 +26,7 @@ func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 			break
 		}
 		if err != nil {
-			return nil, fmt.Errorf("rssparser.Parse_decoder.Token error: %s", err)
+			return nil, fmt.Errorf("RSS.Parse_decoder.Token error: %s", err)
 		}
 		//выбор токена по типу
 		switch tp := tok.(type) {
@@ -36,7 +36,7 @@ func (s *Parser) Parse(body io.Reader) ([]storage.Post, error) {
 				var post storage.Post
 				err = decoder.DecodeElement(&post, &tp)
 				if err != nil {
-					return nil, fmt.Errorf("rssparser.Parse_decoder.DecodeElement error: %s", err)
+					return nil, fmt.Errorf("RSS.Parse_decoder.DecodeElement error: %s", err)
 				}
 				posts = append(posts, post)
 			}
