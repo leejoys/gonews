@@ -87,7 +87,7 @@ func (s *server) poster() {
 //обрабатывает ответы из каналов с ошибками
 func (s *server) logger() {
 	for err := range s.ds.ErrorChan {
-		if err == mongodb.ErrorDuplcatePost {
+		if err == mongodb.ErrorDuplicatePost {
 			log.Println(err)
 			continue
 		}
