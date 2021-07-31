@@ -17,7 +17,7 @@ type Source struct {
 	Parser        Interface         `json:"-"`
 }
 
-// Interface задаёт контракт на работу с источником данных.
+// Interface задаёт контракт на работу с обработчиком данных.
 type Interface interface {
 	Parse(io.Reader) ([]storage.Post, error) // запуск источника данных
 }
