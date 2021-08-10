@@ -70,9 +70,9 @@ func TestAPI_posts(t *testing.T) {
 	// Читаем тело ответа.
 	b, err := ioutil.ReadAll(rr.Body)
 	if err != nil {
-		t.Fatalf("не удалось раскодировать ответ сервера: %v", err)
+		t.Fatalf("не удалось прочитать ответ сервера: %v", err)
 	}
-	// Раскодируем JSON в массив заказов.
+	// Раскодируем JSON в массив новостей.
 	var data []storage.Post
 	err = json.Unmarshal(b, &data)
 	if err != nil {

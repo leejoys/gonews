@@ -19,7 +19,7 @@ type Source struct {
 
 // Interface задаёт контракт на работу с обработчиком данных.
 type Interface interface {
-	Parse(io.Reader) ([]storage.Post, error) // запуск источника данных
+	Parse(io.Reader) ([]storage.Post, error) // запуск обработчика данных
 }
 
 //запускает опрос заданных адресов с заданным периодом
