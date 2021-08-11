@@ -22,7 +22,7 @@ type Interface interface {
 	Parse(io.Reader) ([]storage.Post, error) // запуск обработчика данных
 }
 
-//запускает опрос заданных адресов с заданным периодом
+//Run запускает опрос заданных адресов с заданным периодом
 func (s *Source) Run() {
 	for {
 		for _, link := range s.Links {

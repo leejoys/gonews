@@ -14,7 +14,7 @@ func New() *RSS {
 	return &RSS{}
 }
 
-//читает RSS
+//читает RSS, парсит item в []storage.Post
 func (s *RSS) Parse(body io.Reader) ([]storage.Post, error) {
 
 	decoder := xml.NewDecoder(body)

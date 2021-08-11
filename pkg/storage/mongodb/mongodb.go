@@ -117,7 +117,7 @@ func (s *Store) AddPost(p storage.Post) error {
 	return err
 }
 
-//UpdatePost - обновление по id значения title, content, author_id и published_at
+//UpdatePost - обновление по id значения title, content, pubtime и ink
 func (s *Store) UpdatePost(p storage.Post) error {
 	coll := s.db.Collection("posts")
 	filter := bson.D{{Key: "id", Value: p.ID}}
